@@ -1,0 +1,4 @@
+.travis.yml
+.dockerignore
+Dockerfile
+tests
