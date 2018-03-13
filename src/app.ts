@@ -4,6 +4,7 @@
 // IMPORTS
 
 /* Node */
+import { fork } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -16,16 +17,18 @@ import * as webpack from "webpack";
 import CurrentMode, { Mode } from "./mode";
 import Server from "./server";
 
-// Webpack configs
-import clientWebpack from "./webpack/client";
-import serverWebpack from "./webpack/server";
-
 // ----------------------------------------------------------------------------
 
 const caller = require("caller");
 
 // Types
 type ServerRenderer = (serverStats: webpack.Stats, clientStats: webpack.Stats) => Koa.Middleware;
+
+export interface IAppSerialized {
+  dist: string;
+  mode: string;
+  root: string;
+}
 
 export default class App {
 
@@ -56,7 +59,7 @@ export default class App {
   private _root: string | null = null;
 
   // --------------------------------------------------------------------------
-  /* METHODS */
+  /* PUBLIC METHODS */
   // --------------------------------------------------------------------------
 
   /* LOGGING */
@@ -119,6 +122,17 @@ export default class App {
     return this;
   }
 
+  /* SERIALIZATION */
+
+  // Serialize config into options that our Webpack build process can consume
+  public serialize(): IAppSerialized {
+    return {
+      dist: this._dist,
+      mode: this._mode.toString(),
+      root: this._root!,
+    };
+  }
+
   /* BUILD */
   public async build(): Promise<webpack.Stats> {
 
@@ -171,21 +185,12 @@ export default class App {
       this._spinner.start("Launch.js app building...");
     }
 
-    // Get Webpack configs
-    const clientConfig = clientWebpack(this);
-    const serverConfig = serverWebpack(this);
-
     // Spawn Webpack
     return new Promise<webpack.Stats>((resolve, reject) => {
-      webpack([clientConfig, serverConfig]).run(async (e, webpackStats) => {
 
-        // If there's an error, reject it immediately
-        if (e) {
-          reject(this.error(e.message));
-        }
-
-        // Get the raw build statistics
-        const stats = webpackStats.toJson();
+      // Set up the Webpack build event listener/sender
+      const build = fork(path.join(__dirname, "build.js"));
+      build.once("message", async (stats: any) => {
 
         // Report any build errors
         if (stats.errors.length) {
@@ -210,9 +215,11 @@ export default class App {
               text: "Launch.js app ready",
             });
           }
-          resolve(webpackStats);
+          resolve(stats);
         });
       });
+
+      build.send(this.serialize());
     });
   }
 

@@ -11,7 +11,7 @@ import { mergeWith } from "lodash";
 import * as webpack from "webpack";
 
 /* Launch.js */
-import App from "../app";
+import { IAppSerialized } from "../app";
 
 // ----------------------------------------------------------------------------
 
@@ -31,7 +31,7 @@ export function getRoot(file: string): string {
   return path.join(__dirname, "../../src", file);
 }
 
-export function getConfig(app: App, target: Target, config: Partial<webpack.Configuration>): webpack.Configuration {
+export function getConfig(app: IAppSerialized, target: Target, config: Partial<webpack.Configuration>): webpack.Configuration {
 
   /* PRODUCTION */
   const prod: webpack.Configuration = {

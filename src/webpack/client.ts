@@ -11,16 +11,16 @@ import * as ExtractCssPlugin from "extract-text-webpack-plugin";
 import * as webpack from "webpack";
 
 /* Local */
-import App from "../app";
+import { IAppSerialized } from "../app";
 import * as common from "./common";
 
 // ----------------------------------------------------------------------------
 
-export default (app: App): webpack.Configuration => {
+export default (app: IAppSerialized): webpack.Configuration => {
   const config = common.getConfig(app, common.Target.Client, {
 
     // Set client entry
-    entry: [common.getRoot("entry/client")],
+    entry: [common.getRoot("entry/client.tsx")],
 
     // Modules
     module: {

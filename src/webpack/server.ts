@@ -12,18 +12,18 @@ import * as webpack from "webpack";
 import * as nodeModules from "webpack-node-externals";
 
 /* Local */
-import App from "../app";
+import { IAppSerialized } from "../app";
 import * as common from "./common";
 
 // ----------------------------------------------------------------------------
 
 // const AssetsPlugin = require("webpack-assets-manifest");
 
-export default (app: App): webpack.Configuration => {
+export default (app: IAppSerialized): webpack.Configuration => {
   const config = common.getConfig(app, common.Target.Server, {
 
     // Set server entry
-    entry: [common.getRoot("entry/server")],
+    entry: [common.getRoot("entry/server.tsx")],
 
     // External modules that we avoid transpiling
     externals: nodeModules({
