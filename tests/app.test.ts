@@ -7,6 +7,9 @@
 import * as fs from "fs";
 import * as path from "path";
 
+/* Node */
+import * as rimraf from "rimraf";
+
 /* Launch.js */
 import App from "../src/app";
 
@@ -24,6 +27,13 @@ function newApp(): App {
 }
 
 describe("@launch/app tests", () => {
+
+  // Clean up the distribution folder after each test
+  after(done => {
+    rimraf(buildDir, () => {
+        done();
+    });
+  });
 
   it("should create server/client bundles", async () => {
     const app = newApp();

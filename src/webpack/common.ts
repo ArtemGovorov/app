@@ -28,7 +28,7 @@ export const regex = {
 };
 
 export function getRoot(file: string): string {
-  return path.join(__dirname, "../", file);
+  return path.join(__dirname, "../../src", file);
 }
 
 export function getConfig(app: App, target: Target, config: Partial<webpack.Configuration>): webpack.Configuration {
