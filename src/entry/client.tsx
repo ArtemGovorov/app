@@ -75,7 +75,7 @@ const Browser = (() => {
       require(__ROOT_ENTRYPOINT).default;
 
       // Re-render the hierarchy
-      doRender();
+      void doRender();
     });
 
     return () => (
@@ -87,4 +87,4 @@ const Browser = (() => {
   return Chain;
 })();
 
-doRender();
+void doRender();

@@ -61,7 +61,5 @@ export default (app: App): webpack.Configuration => {
     ],
   });
 
-  console.log("CLIENT ->", JSON.stringify(config, null, 2));
-
   return config;
 };

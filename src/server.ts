@@ -30,6 +30,16 @@ import { Mode } from "./mode";
 
 // ----------------------------------------------------------------------------
 
+// Types
+type RouteVerb = "get" | "post" | "put" | "patch" | "delete";
+type AttachHandler = (koa: Koa, router: KoaRouter) => void;
+
+interface IUserRoute {
+  verb: RouteVerb;
+  url: string;
+  fn: KoaRouter.IMiddleware;
+}
+
 export default class Server {
 
   // --------------------------------------------------------------------------
@@ -56,13 +66,22 @@ export default class Server {
   // Enable request timing
   private _enableTiming = true;
 
+  // User middleware
+  private _middleware = new Set<Koa.Middleware>();
+
+  // User routes
+  private _routes: IUserRoute[] = [];
+
+  // User callback function to attach koa/router
+  private _attachFunction: AttachHandler | null = null;
+
   /* CONFIGURATION */
 
   // Use default `koa-cors` options
   private _corsOptions: koaCors.Options = {};
 
   // --------------------------------------------------------------------------
-  /* METHODS */
+  /* PUBLIC METHODS */
   // --------------------------------------------------------------------------
 
   /* CONSTRUCTOR */
@@ -71,6 +90,41 @@ export default class Server {
   }
 
   /* ROUTING */
+
+  // Add GET route
+  public get(url: string, fn: KoaRouter.IMiddleware): this {
+    this.addRoute("get", url, fn);
+
+    return this;
+  }
+
+  // Add POST route
+  public post(url: string, fn: KoaRouter.IMiddleware): this {
+    this.addRoute("post", url, fn);
+
+    return this;
+  }
+
+  // Add PUT route
+  public put(url: string, fn: KoaRouter.IMiddleware): this {
+    this.addRoute("put", url, fn);
+
+    return this;
+  }
+
+  // Add PUT route
+  public patch(url: string, fn: KoaRouter.IMiddleware): this {
+    this.addRoute("patch", url, fn);
+
+    return this;
+  }
+
+  // Add DELETE route
+  public delete(url: string, fn: KoaRouter.IMiddleware): this {
+    this.addRoute("delete", url, fn);
+
+    return this;
+  }
 
   // Disable /ping routes
   public disablePing(): this {
@@ -141,15 +195,26 @@ export default class Server {
     return this;
   }
 
+  // Add user middleware
+  public middleware(fn: Koa.Middleware): this {
+    this._middleware.add(fn);
+
+    return this;
+  }
+
+  // Allow users to attach a callback function before initialisation
+  // to access `koa` and `router`
+  public attach(fn: AttachHandler) {
+    this._attachFunction = fn;
+  }
+
   /* SERVER */
 
   // Create a new server, and return the Koa app instance
   public create() {
 
-    // Koa web server instance
-    const app = new Koa();
-
-    // Router
+    // Create new Koa and router instances
+    const koa = new Koa();
     const router = new KoaRouter();
 
     // Set-up a general purpose /ping route to check the server is alive
@@ -169,13 +234,13 @@ export default class Server {
 
     // Add cross-origin request handling
     if (this._enableCors) {
-      app.use(koaCors(this._corsOptions));
+      koa.use(koaCors(this._corsOptions));
     }
 
     // Add default error handling middleware. Errors/exceptions not caught
     // will wind up here.
     if (this._enableDefaultErrorHandler) {
-      app.use(async (ctx, next) => {
+      koa.use(async (ctx, next) => {
         try {
           await next();
         } catch (e) {
@@ -188,7 +253,7 @@ export default class Server {
     // It's useful to see how long a request takes to respond.  Add the
     // timing to a HTTP Response header
     if (this._enableTiming) {
-      app.use(async (ctx, next) => {
+      koa.use(async (ctx, next) => {
         const start = ms.now();
         await next();
         const end = ms.parse(ms.since(start));
@@ -205,7 +270,7 @@ export default class Server {
     };
 
     // ... and then attach the handler
-    app.use(async (ctx, next) => {
+    koa.use(async (ctx, next) => {
       try {
         if (ctx.path !== "/") {
           return await koaSend(
@@ -218,10 +283,34 @@ export default class Server {
       return next();
     });
 
-    // Return the Koa web server and router, as separate objects
-    return {
-      app,
-      router,
-    };
+    // Add custom middleware
+    this._middleware.forEach(fn => koa.use(fn));
+
+    // Add custom routes
+    this._routes.forEach(r => router[r.verb](r.url, r.fn));
+
+    // Run attachment callback, if applicable
+    if (typeof this._attachFunction === "function") {
+      this._attachFunction(koa, router);
+    }
+
+    // Attach router
+    koa.use(router.allowedMethods())
+      .use(router.routes());
+
+    return koa;
   }
+
+  // --------------------------------------------------------------------------
+  /* PRIVATE METHODS */
+  // --------------------------------------------------------------------------
+
+  private addRoute(verb: RouteVerb, url: string, fn: KoaRouter.IMiddleware) {
+    this._routes.push({
+      fn,
+      url,
+      verb,
+    });
+  }
+
 }

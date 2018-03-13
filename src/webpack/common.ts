@@ -39,21 +39,6 @@ export function getConfig(app: App, target: Target, config: Partial<webpack.Conf
     mode: "production",
     module: {
       rules: [
-        // JS
-        // {
-        //   test: /\.jsx?$/i,
-        //   use: [
-        //     {
-        //       loader: "babel-loader",
-        //       options: {
-        //         presets: [
-        //           "env",
-        //           "react",
-        //         ],
-        //       },
-        //     },
-        //   ],
-        // },
         // Typescript
         {
           test: /\.(j|t)sx?$/i,

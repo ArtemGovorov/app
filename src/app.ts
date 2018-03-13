@@ -72,17 +72,6 @@ export default class App {
     this._isSilent = false;
   }
 
-  /* ERROR HANDLING */
-
-  // Set an error. This will update the Ora `spinner` instance with a
-  // failed message, and throw
-  public error(msg: string): void {
-    if (!this._isSilent) {
-        this._spinner.fail(`Error: ${msg}`);
-    }
-    throw new Error(msg);
-  }
-
   /* CONFIGURATION */
 
   // Get the distribution folder
@@ -207,17 +196,14 @@ export default class App {
         const [clientStats, serverStats] = stats.children;
         const serverRender: ServerRenderer = require(path.join(this.dist, "server.js")).default;
 
-        const { app, router } = this._server.create();
+        // Attach React route handler
+        this._server.get("/*", await serverRender(serverStats, clientStats));
 
-        // Attach React middleware
-        router.get("/*", await serverRender(serverStats, clientStats));
-
-        // Attach router
-        app.use(router.allowedMethods());
-        app.use(router.routes());
+        // Create listener
+        const koa = this._server.create();
 
         // Run the server!
-        app.listen(this._port, () => {
+        koa.listen(this._port, () => {
           if (!this._isSilent) {
             this._spinner.stopAndPersist({
               symbol: "🚀",
@@ -242,4 +228,20 @@ export default class App {
         process.exit(1);
     }
   }
+
+  // --------------------------------------------------------------------------
+  /* PRIVATE METHODS */
+  // --------------------------------------------------------------------------
+
+  /* ERROR HANDLING */
+
+  // Set an error. This will update the Ora `spinner` instance with a
+  // failed message, and throw
+  private error(msg: string): void {
+    if (!this._isSilent) {
+        this._spinner.fail(`Error: ${msg}`);
+    }
+    throw new Error(msg);
+  }
+
 }

@@ -1,11 +1,13 @@
 {
   "name": "@launch/app",
   "version": "0.2.0",
-  "description": "Launch.js - Universal React framework",
-  "main": "index.js",
+  "description": "Launch.js - fast universal apps",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "lint": "tslint --project .",
+    "prepublishOnly": "npm run lint && npm run build",
     "test": "mocha --reporter spec --require ts-node/register 'tests/**/*.test.ts'"
   },
   "repository": {
