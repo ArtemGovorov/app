@@ -20,7 +20,7 @@ export default (app: App): webpack.Configuration => {
   const config = common.getConfig(app, common.Target.Client, {
 
     // Set client entry
-    entry: [common.getRoot("entry/client.tsx")],
+    entry: [common.getRoot("entry/client")],
 
     // Modules
     module: {

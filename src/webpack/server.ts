@@ -23,7 +23,7 @@ export default (app: App): webpack.Configuration => {
   const config = common.getConfig(app, common.Target.Server, {
 
     // Set server entry
-    entry: [common.getRoot("entry/server.tsx")],
+    entry: [common.getRoot("entry/server")],
 
     // External modules that we avoid transpiling
     externals: nodeModules({
