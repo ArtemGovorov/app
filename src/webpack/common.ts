@@ -4,6 +4,7 @@
 // IMPORTS
 
 /* Node */
+import * as fs from "fs";
 import * as path from "path";
 
 /* NPM */
@@ -28,7 +29,15 @@ export const regex = {
 };
 
 export function getRoot(file: string): string {
-  return path.join(__dirname, "../../src", file);
+  const walk = (folder: string): string => {
+    const files = fs.readdirSync(folder);
+    if (files.includes("package.json")) {
+      return folder;
+    }
+    return walk(path.join(folder, ".."));
+  };
+
+  return path.join(walk(__dirname), "src", file);
 }
 
 export function getConfig(app: IAppSerialized, target: Target, config: Partial<webpack.Configuration>): webpack.Configuration {
