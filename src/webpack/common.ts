@@ -55,6 +55,7 @@ export function getConfig(app: IAppSerialized, target: Target, config: Partial<w
             {
               loader: "babel-loader",
               options: {
+                compact: true,
                 plugins: [
                   "syntax-dynamic-import",
                   "syntax-typescript",
@@ -65,7 +66,7 @@ export function getConfig(app: IAppSerialized, target: Target, config: Partial<w
               loader: "ts-loader",
               options: {
                 compilerOptions: {
-                    module: "esnext",
+                  module: "esnext",
                 },
               },
             },
