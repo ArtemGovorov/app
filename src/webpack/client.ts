@@ -12,16 +12,43 @@ import * as webpack from "webpack";
 
 /* Local */
 import { IAppSerialized } from "../app";
+import CurrentMode, { Mode } from "../mode";
 import * as common from "./common";
 
 // ----------------------------------------------------------------------------
 
 export default (app: IAppSerialized): webpack.Configuration => {
-  const config = common.getConfig(app, common.Target.Client, {
+
+  // Base client config
+  const base: webpack.Configuration = {
 
     // Set client entry
-    entry: [common.getRoot("entry/client.tsx")],
+    entry: [common.getPath("entry/client.tsx")],
 
+    // Name
+    name: "client",
+
+    // Set-up some common mocks/polyfills for features available in node, so
+    // the browser doesn't balk when it sees this stuff
+    node: {
+      console: true,
+      fs: "empty",
+      net: "empty",
+      tls: "empty",
+    },
+
+    // Output
+    output: {
+      path: path.join(app.dist, "public"),
+    },
+
+  };
+
+  // Development client config
+  const dev: webpack.Configuration = {};
+
+  // Production client config
+  const prod: webpack.Configuration = {
     // Modules
     module: {
       rules: [
@@ -43,14 +70,10 @@ export default (app: IAppSerialized): webpack.Configuration => {
       ],
     },
 
-    // Name
-    name: "client",
-
     // Output
     output: {
       chunkFilename: "assets/js/[name].[chunkhash].js",
       filename: "assets/js/[name].[chunkhash].js",
-      path: path.join(app.dist, "public"),
     },
 
     // Plugins
@@ -59,7 +82,11 @@ export default (app: IAppSerialized): webpack.Configuration => {
         filename: "assets/css/[name].[contenthash].css",
       }),
     ],
-  });
+  };
+
+  const config = common.getConfig(app, common.Target.Client, base,
+    CurrentMode.fromString(app.mode) === Mode.Production ? prod : dev,
+  );
 
   return config;
 };

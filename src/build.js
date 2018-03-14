@@ -23,7 +23,18 @@ process.once("message", appConfig => {
   const clientConfig = clientWebpack(appConfig);
   const serverConfig = serverWebpack(appConfig);
 
-  webpack([clientConfig, serverConfig]).run(async (_, webpackStats) => {
-    process.send(webpackStats.toJson());
+  webpack([clientConfig, serverConfig]).run((error, stats) => {
+    const response = {};
+
+    try {
+      if (error) {
+        throw error;
+      }
+      response.stats = stats.toJson();
+    } catch (e) {
+      response.error = e.message;
+    }
+
+    process.send(response);
   });
 });

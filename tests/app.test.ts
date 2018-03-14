@@ -12,6 +12,7 @@ import * as rimraf from "rimraf";
 
 /* Launch.js */
 import App from "../src/app";
+import { Mode } from "../src/mode";
 
 // ----------------------------------------------------------------------------
 
@@ -22,6 +23,7 @@ const buildDir = path.join(__dirname, "tmp");
 function newApp(): App {
   const app = new App();
   app.setDist(buildDir);
+  app.setMode(Mode.Production);
 
   return app;
 }

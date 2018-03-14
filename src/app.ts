@@ -134,7 +134,7 @@ export default class App {
   }
 
   /* BUILD */
-  public async build(): Promise<webpack.Stats> {
+  public async build(): Promise<webpack.Stats|undefined> {
 
     /* RUN INITIAL SANITY CHECKS */
 
@@ -186,41 +186,60 @@ export default class App {
     }
 
     // Spawn Webpack
-    return new Promise<webpack.Stats>((resolve, reject) => {
+    try {
+      return new Promise<webpack.Stats>((resolve, reject) => {
 
-      // Set up the Webpack build event listener/sender
-      const build = fork(path.join(__dirname, "build.js"));
-      build.once("message", async (stats: any) => {
+        // Set up the Webpack build event listener/sender
 
-        // Report any build errors
-        if (stats.errors.length) {
-          reject(this.error(`Webpack build error(s):\n${stats.errors.join("\n")}`));
-        }
+        const build = fork(path.join(__dirname, "build.js"));
 
-        // Get the local stats, and grab our new middleware
-        const [clientStats, serverStats] = stats.children;
-        const serverRender: ServerRenderer = require(path.join(this.dist, "server.js")).default;
+        build.once("message", async ({ error, stats }) => {
+          console.log("hey");
+          try {
 
-        // Attach React route handler
-        this._server.get("/*", await serverRender(serverStats, clientStats));
+            // Report any Webpack `run` errors
+            if (error) {
+              this.error(error.message);
+            }
 
-        // Create listener
-        const koa = this._server.create();
+            // Report any build errors
+            if (stats.errors.length) {
+              this.error(`Webpack build error(s):\n${stats.errors.join("\n")}`);
+            }
 
-        // Run the server!
-        koa.listen(this._port, () => {
-          if (!this._isSilent) {
-            this._spinner.stopAndPersist({
-              symbol: "🚀",
-              text: "Launch.js app ready",
+            // Get the local stats, and grab our new middleware
+            const [clientStats, serverStats] = stats.children;
+            const serverRender: ServerRenderer = require(path.join(this.dist, "server.js")).default;
+
+            // Attach React route handler
+            this._server.get("/*", await serverRender(serverStats, clientStats));
+
+            // Create listener
+            const koa = this._server.create();
+
+            // Run the server!
+            koa.listen(this._port, () => {
+              if (!this._isSilent) {
+                this._spinner.stopAndPersist({
+                  symbol: "🚀",
+                  text: "Launch.js app ready",
+                });
+              }
+              resolve(stats);
             });
+
+          } catch (e) {
+            return reject(e);
           }
-          resolve(stats);
         });
+
+        // Kick-off the build process by sending a serialized config
+        build.send(this.serialize());
       });
 
-      build.send(this.serialize());
-    });
+    } catch (e) {
+      this.error(e.message);
+    }
   }
 
   // Launch the app. If there are any errors, the process with exit with

@@ -14,6 +14,11 @@ function getDefaultMode(): Mode {
 
 export default class CurrentMode {
 
+  // Enum from string
+  public static fromString(name: string): Mode {
+    return name === "production" ? Mode.Production : Mode.Development;
+  }
+
   // --------------------------------------------------------------------------
   /* PROPERTIES */
   // --------------------------------------------------------------------------

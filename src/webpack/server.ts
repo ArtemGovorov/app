@@ -13,6 +13,7 @@ import * as nodeModules from "webpack-node-externals";
 
 /* Local */
 import { IAppSerialized } from "../app";
+import CurrentMode, { Mode } from "../mode";
 import * as common from "./common";
 
 // ----------------------------------------------------------------------------
@@ -20,10 +21,11 @@ import * as common from "./common";
 // const AssetsPlugin = require("webpack-assets-manifest");
 
 export default (app: IAppSerialized): webpack.Configuration => {
-  const config = common.getConfig(app, common.Target.Server, {
 
+  // Base server config
+  const base: webpack.Configuration = {
     // Set server entry
-    entry: [common.getRoot("entry/server.tsx")],
+    entry: [common.getPath("entry/server.tsx")],
 
     // External modules that we avoid transpiling
     externals: nodeModules({
@@ -33,8 +35,8 @@ export default (app: IAppSerialized): webpack.Configuration => {
       ],
     }),
 
-    // Modules
-    module: {
+     // Modules
+     module: {
       rules: [
         // CSS
         {
@@ -73,7 +75,17 @@ export default (app: IAppSerialized): webpack.Configuration => {
 
     // Target
     target: "node",
-  });
+  };
+
+  // Development config
+  const dev: webpack.Configuration = {};
+
+  // Production config
+  const prod: webpack.Configuration = {};
+
+  const config = common.getConfig(app, common.Target.Server, base,
+    CurrentMode.fromString(app.mode) === Mode.Production ? prod : dev,
+  );
 
   return config;
 };

@@ -28,19 +28,22 @@ export const regex = {
   images: /\.(jpe?g|png|gif|svg)$/i,
 };
 
-export function getRoot(file: string): string {
-  const walk = (folder: string): string => {
-    const files = fs.readdirSync(folder);
-    if (files.includes("package.json")) {
+// Memoize the Launch.js module root
+const packageRoot = (
+  function walk(folder: string): string {
+    if (fs.readdirSync(folder).includes("package.json")) {
       return folder;
     }
-    return walk(path.join(folder, ".."));
-  };
+    return walk(path.resolve(folder, ".."));
+  }
+)(__dirname);
 
-  return path.join(walk(__dirname), "src", file);
+// Helper function to locate source files
+export function getPath(file: string): string {
+  return path.join(packageRoot, "src", file);
 }
 
-export function getConfig(app: IAppSerialized, target: Target, config: Partial<webpack.Configuration>): webpack.Configuration {
+export function getConfig(app: IAppSerialized, target: Target, ...configs: Array<Partial<webpack.Configuration>>): webpack.Configuration {
 
   /* PRODUCTION */
   const prod: webpack.Configuration = {
@@ -122,12 +125,12 @@ export function getConfig(app: IAppSerialized, target: Target, config: Partial<w
       ),
     ],
     resolve: {
-      extensions: [".ts", ".tsx", ".js", ".css"],
+      extensions: [".ts", ".tsx", ".js"],
     },
   };
 
   // Merge the configuration; combine arrays
-  return mergeWith({}, prod, config, (objValue, srcValue) => {
+  return mergeWith({}, prod, ...configs, (objValue: any, srcValue: any) => {
     if (Array.isArray(objValue)) {
       return objValue.concat(srcValue);
     }
