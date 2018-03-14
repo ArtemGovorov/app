@@ -6,6 +6,7 @@
 /* Node */
 import { fork } from "child_process";
 import * as fs from "fs";
+import * as http from "http";
 import * as path from "path";
 
 /* NPM */
@@ -134,7 +135,7 @@ export default class App {
   }
 
   /* BUILD */
-  public async build(): Promise<webpack.Stats|undefined> {
+  public async build(): Promise<http.Server | undefined> {
 
     /* RUN INITIAL SANITY CHECKS */
 
@@ -187,14 +188,11 @@ export default class App {
 
     // Spawn Webpack
     try {
-      return new Promise<webpack.Stats>((resolve, reject) => {
+      return new Promise<http.Server>((resolve, reject) => {
 
         // Set up the Webpack build event listener/sender
-
         const build = fork(path.join(__dirname, "build.js"));
-
         build.once("message", async ({ error, stats }) => {
-          console.log("hey");
           try {
 
             // Report any Webpack `run` errors
@@ -218,16 +216,15 @@ export default class App {
             const koa = this._server.create();
 
             // Run the server!
-            koa.listen(this._port, () => {
+            const server = koa.listen(this._port, () => {
               if (!this._isSilent) {
                 this._spinner.stopAndPersist({
                   symbol: "🚀",
                   text: "Launch.js app ready",
                 });
               }
-              resolve(stats);
+              resolve(server);
             });
-
           } catch (e) {
             return reject(e);
           }

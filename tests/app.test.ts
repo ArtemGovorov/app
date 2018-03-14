@@ -28,6 +28,8 @@ function newApp(): App {
   return app;
 }
 
+const timeout = 120000;
+
 describe("@launch/app tests", () => {
 
   // Clean up the distribution folder after each test
@@ -44,7 +46,8 @@ describe("@launch/app tests", () => {
     app.setRoot("./components/root.tsx");
 
     // Build
-    await app.build();
+    const server = await app.build();
+    server.close();
 
     // Check that the relevant files exist
     const files = [
@@ -55,6 +58,6 @@ describe("@launch/app tests", () => {
     if (!files.every(file => fs.existsSync(file))) {
       throw new Error("Missing build files");
     }
-  }).timeout(30000);
+  }).timeout(timeout);
 
 });

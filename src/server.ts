@@ -312,5 +312,4 @@ export default class Server {
       verb,
     });
   }
-
 }
