@@ -1,6 +1,6 @@
 {
   "name": "@launch/app",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Launch.js - fast universal apps",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
