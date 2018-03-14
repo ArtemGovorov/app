@@ -43,9 +43,6 @@ export function getPath(file: string): string {
   return path.join(packageRoot, "src", file);
 }
 
-// Fork TS type checking into a separate process
-const ForkTSChecker = require("fork-ts-checker-webpack-plugin");
-
 export function getConfig(app: IAppSerialized, target: Target, ...configs: Array<Partial<webpack.Configuration>>): webpack.Configuration {
 
   /* PRODUCTION */
@@ -75,6 +72,10 @@ export function getConfig(app: IAppSerialized, target: Target, ...configs: Array
                 compilerOptions: {
                   module: "esnext",
                 },
+
+                // Avoid typechecking, to speed up bundling. To avoid the
+                // complexity of type checking *both* @launch/app and a project's
+                // `tsconfig.json`, this should be a userland exercise
                 transpileOnly: true,
               },
             },
@@ -117,9 +118,6 @@ export function getConfig(app: IAppSerialized, target: Target, ...configs: Array
 
     // File extensions that webpack will resolve
     plugins: [
-      new ForkTSChecker({
-        silent: true,
-      }),
       new webpack.DefinePlugin({
         "SERVER": target === Target.Server,
         "__ROOT_ENTRYPOINT": app.root,
