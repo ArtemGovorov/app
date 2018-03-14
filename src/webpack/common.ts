@@ -53,7 +53,7 @@ export function getConfig(app: IAppSerialized, target: Target, ...configs: Array
       rules: [
         // Typescript
         {
-          exclude: /node_modules/,
+          exclude: /node_modules(?!\/@launch\/)/i,
           test: /\.(j|t)sx?$/i,
           use: [
             {
