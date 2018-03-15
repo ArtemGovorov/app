@@ -124,6 +124,8 @@ export default async function(serverStats: any, clientStats: any): Promise<koa.M
       </Html>,
     );
 
+    console.log("css chunks ->", getChunks(webpackModules, "css"));
+
     // Set the return type to `text/html`, and send response to client
     ctx.type = "text/html";
     ctx.body = `<!DOCTYPE html>${reactRender}`;

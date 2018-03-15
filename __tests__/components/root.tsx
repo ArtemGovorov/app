@@ -9,5 +9,5 @@ import * as React from "react";
 // ----------------------------------------------------------------------------
 
 export default () => (
-  <h1>Hello from Launch.js!</h1>
+  <h1>From root.tsx</h1>
 );

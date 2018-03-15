@@ -4,7 +4,8 @@
 // IMPORTS
 
 /* Node */
-import { fork } from "child_process";
+import { ChildProcess, fork } from "child_process";
+import { EventEmitter } from "events";
 import * as fs from "fs";
 import * as http from "http";
 import * as path from "path";
@@ -15,6 +16,7 @@ import * as ora from "ora";
 import * as webpack from "webpack";
 
 /* Launch.js */
+import createBuildEvent from "./build";
 import CurrentMode, { Mode } from "./mode";
 import Server from "./server";
 
@@ -59,6 +61,9 @@ export default class App {
   // component that will render to `<div id="root">`
   private _root: string | null = null;
 
+  // Enable Webpack builds via fork, by default
+  private _fork = true;
+
   // --------------------------------------------------------------------------
   /* PUBLIC METHODS */
   // --------------------------------------------------------------------------
@@ -66,14 +71,18 @@ export default class App {
   /* LOGGING */
 
   // Enable silent mode, i.e. no logging to stdout
-  public silent(): void {
+  public silent(): this {
     this._isSilent = true;
+
+    return this;
   }
 
   // Enable verbose output (silent === false.) You only need to execute
   // this if silent mode has previously been ued
-  public verbose(): void {
+  public verbose(): this {
     this._isSilent = false;
+
+    return this;
   }
 
   /* CONFIGURATION */
@@ -91,6 +100,19 @@ export default class App {
   // Get the root entrypoint
   public get root(): string | null {
     return this._root;
+  }
+
+  // Get the server instance
+  public get server(): Server {
+    return this._server;
+  }
+
+  // Disable forking Webpack builds, for single threaded
+  // environments and testing
+  public disableFork(): this {
+    this._fork = false;
+
+    return this;
   }
 
   // Set the build mode
@@ -188,10 +210,22 @@ export default class App {
 
     // Spawn Webpack
     try {
-      return new Promise<http.Server>((resolve, reject) => {
+
+      let build: EventEmitter;
+
+      if (this._fork) {
 
         // Set up the Webpack build event listener/sender
-        const build = fork(path.join(__dirname, "build.js"));
+        build = fork(path.join(__dirname, "fork.js"));
+        (build as ChildProcess).send(this.serialize());
+
+      } else {
+        build = createBuildEvent(this.serialize());
+      }
+
+      return await new Promise<http.Server>((resolve, reject) => {
+
+        // Set up the Webpack build event listener/sender
         build.once("message", async ({ error, stats }) => {
           try {
 
@@ -229,9 +263,6 @@ export default class App {
             return reject(e);
           }
         });
-
-        // Kick-off the build process by sending a serialized config
-        build.send(this.serialize());
       });
 
     } catch (e) {

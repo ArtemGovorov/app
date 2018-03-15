@@ -56,16 +56,16 @@ export function getConfig(app: IAppSerialized, target: Target, ...configs: Array
           exclude: /node_modules(?!\/@launch\/)/i,
           test: /\.(j|t)sx?$/i,
           use: [
-            {
-              loader: "babel-loader",
-              options: {
-                compact: true,
-                plugins: [
-                  "syntax-dynamic-import",
-                  "syntax-typescript",
-                ],
-              },
-            },
+            // {
+            //   loader: "babel-loader",
+            //   options: {
+            //     compact: true,
+            //     plugins: [
+            //       "syntax-dynamic-import",
+            //       "syntax-typescript",
+            //     ],
+            //   },
+            // },
             {
               loader: "ts-loader",
               options: {

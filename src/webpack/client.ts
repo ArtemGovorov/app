@@ -7,7 +7,6 @@
 import * as path from "path";
 
 /* NPM */
-import * as ExtractCssPlugin from "extract-text-webpack-plugin";
 import * as webpack from "webpack";
 
 /* Local */
@@ -16,6 +15,9 @@ import CurrentMode, { Mode } from "../mode";
 import * as common from "./common";
 
 // ----------------------------------------------------------------------------
+
+// Extract CSS into chunks
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 export default (app: IAppSerialized): webpack.Configuration => {
 
@@ -55,17 +57,18 @@ export default (app: IAppSerialized): webpack.Configuration => {
         // CSS
         {
           test: /\.css$/,
-          use: ExtractCssPlugin.extract({
-            use: [
-              {
-                loader: "css-loader",
-                options: {
-                  localIdentName: "[name]__[local]--[hash:base64:5]",
-                  modules: true,
-                },
+          use: [
+            {
+              loader: MiniCssExtractPlugin.loader,
+            },
+            {
+              loader: "css-loader",
+              options: {
+                localIdentName: "[name]__[local]--[hash:base64:5]",
+                modules: true,
               },
-            ],
-          }),
+            },
+          ],
         },
       ],
     },
@@ -78,8 +81,9 @@ export default (app: IAppSerialized): webpack.Configuration => {
 
     // Plugins
     plugins: [
-      new ExtractCssPlugin({
-        filename: "assets/css/[name].[contenthash].css",
+      new MiniCssExtractPlugin({
+        chunkFilename: "assets/css/[id].css",
+        filename: "assets/css/[name].css",
       }),
     ],
   };
